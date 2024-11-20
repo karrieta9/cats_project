@@ -3,7 +3,7 @@ import 'package:cats_project/src/pages/detail_page.dart';
 import 'package:cats_project/src/providers/cats_provider.dart';
 
 class LandingPage extends StatefulWidget {
-  // const LandingPage({super.key});
+  const LandingPage({Key? key}) : super(key: key);
 
   @override
   State<LandingPage> createState() => _LandingPageState();
@@ -11,11 +11,11 @@ class LandingPage extends StatefulWidget {
 
 class _LandingPageState extends State<LandingPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final catsProvider = CatsProvider();
   List cats = [];
   List filteredCats = [];
   bool _cargando = true;
 
-  final catsProvider = CatsProvider();
 
   @override
   void initState() {
@@ -28,42 +28,10 @@ class _LandingPageState extends State<LandingPage> {
     setState(() {});
 
     cats = await catsProvider.getCats();
-
-    //   for (var cat in cats) {
-    //     final imageUrl = await getImageUrl(cat['id']);
-    //   // cat['isFavorite'] = false;
-    // }
-
-
-
     filteredCats = cats;
-
     _cargando = false;
-    print(cats);
+
     setState(() {});
-  }
-
-    Future<String> getImageUrl(String id) async {
-      List img_cat = await catsProvider.getImgCat(id);
-
-    // final baseUrl = 'https://cdn2.thecatapi.com/images/';
-    // final jpgUrl = '$baseUrl$referenceId.jpg';
-    // final pngUrl = '$baseUrl$referenceId.png';
-
-    // // Verifica si el archivo .jpg existe
-    // final jpgResponse = await http.head(Uri.parse(jpgUrl));
-    // if (jpgResponse.statusCode == 200) {
-    //   return jpgUrl;
-    // }
-
-    // // Si no existe, verifica si el archivo .png existe
-    // final pngResponse = await http.head(Uri.parse(pngUrl));
-    // if (pngResponse.statusCode == 200) {
-    //   return pngUrl;
-    // }
-
-    // Si ninguno existe, devuelve un enlace predeterminado
-    return 'https://via.placeholder.com/150';
   }
 
   @override
@@ -72,10 +40,26 @@ class _LandingPageState extends State<LandingPage> {
       key: _scaffoldKey,
       body: Center(
           child: _cargando
-              ? const Text('cargando')
+              ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Text(
+                    'Loading ...',
+                    style: TextStyle(
+                      fontSize: 20.0,
+                      fontWeight: FontWeight.w600
+                    ),
+                  ),
+                  SizedBox(height: 20.0,),
+                  CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation(Color(0xfffa7c5d)),
+                    backgroundColor: Colors.grey
+                  )
+                ],
+              )
               : Column(
                   crossAxisAlignment:
-                      CrossAxisAlignment.start, // Alinea el texto al inicio
+                      CrossAxisAlignment.start,
                   children: [
                     const SafeArea(
                       child: Padding(
@@ -129,7 +113,7 @@ class _LandingPageState extends State<LandingPage> {
                         padding: const EdgeInsets.all(8),
                         itemCount: filteredCats.length,
                         itemBuilder: (BuildContext context, int index) {
-                          return card(filteredCats[index]);
+                          return CardCat(infoCat: filteredCats[index]);
                         },
                       ),
                     ),
@@ -138,13 +122,36 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  Widget card(Map infoCat) {
-    String fotoCat = 'https://cdn2.thecatapi.com/images/MJWtDz75E.jpg';
-    // 'https://cdn2.thecatapi.com/images/${infoCat['reference_image_id']}.jpg'),
+  void _filterCats(String query) {
+    final results = cats
+        .where((cat) => cat['name'].toLowerCase().contains(query.toLowerCase()))
+        .toList();
+
+    setState(() {
+      filteredCats = results;
+    });
+  }
+}
+
+class CardCat extends StatefulWidget {
+  final Map infoCat;
+  const CardCat({Key? key, required this.infoCat}) :  super(key: key);  
+
+  @override
+  State<CardCat> createState() => CardCatState();
+}
+
+class CardCatState extends State<CardCat> {
+
+  @override
+  Widget build(BuildContext context) {
+    // String fotoCat = 
+    // // 'https://cdn2.thecatapi.com/images/MJWtDz75E.jpg';
+    // 'https://cdn2.thecatapi.com/images/${widget.infoCat['reference_image_id']}.jpg';
     return GestureDetector(
       onTap: () {
         Navigator.push(context,
-            MaterialPageRoute(builder: (context) => DetailPage(data: infoCat)));
+            MaterialPageRoute(builder: (context) => DetailPage(data: widget.infoCat)));
       },
       child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 5.0),
@@ -167,13 +174,15 @@ class _LandingPageState extends State<LandingPage> {
                             height: double.infinity,
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(20.0),
-                              child: FadeInImage(
-                                  placeholder: const AssetImage(
-                                      'assets/img/cat_step.png'),
+                              child: const FadeInImage(
+                                  placeholder: AssetImage(
+                                      'assets/img/footstep.png'),
                                   fadeInDuration:
-                                      const Duration(milliseconds: 200),
+                                      Duration(milliseconds: 200),
                                   fit: BoxFit.cover,
-                                  image: NetworkImage(fotoCat)),
+                                  image: AssetImage(
+                                      'assets/img/cat_shape.png'))
+                                  // image: imageProvider(fotoCat)),      
                             )),
                       ),
                     ),
@@ -186,7 +195,7 @@ class _LandingPageState extends State<LandingPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              infoCat['name'],
+                              widget.infoCat['name'],
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -195,7 +204,7 @@ class _LandingPageState extends State<LandingPage> {
                                   fontWeight: FontWeight.w500),
                             ),
                             Text(
-                              infoCat['origin'],
+                              widget.infoCat['origin'],
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -209,7 +218,7 @@ class _LandingPageState extends State<LandingPage> {
                               endIndent: 10,
                             ),
                             Text(
-                              'Intelligence : ${infoCat['intelligence']}',
+                              'Intelligence : ${widget.infoCat['intelligence']}',
                               style: const TextStyle(
                                   fontSize: 16,
                                   color: Color(0xff737373),
@@ -244,16 +253,13 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  void _filterCats(String query) {
-    final results = cats
-        .where((cat) =>
-            cat['name'].toLowerCase().contains(query.toLowerCase()))
-        .toList();
-
-    setState(() {
-      filteredCats = results;
-    });
+ImageProvider<Object> imageProvider(String fotoCat) {
+  try {
+    // Intenta cargar la imagen usando NetworkImage
+    return NetworkImage(fotoCat);
+  } catch (e) {
+    // Si hay un error, devuelve una imagen de respaldo
+    return const AssetImage('assets/img/footstep.png');
   }
-
-
+}
 }

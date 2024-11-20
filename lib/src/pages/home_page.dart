@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
 class HomePage extends StatelessWidget {
+  const HomePage({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
+    final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      // backgroundColor: const Color(0xfffa7c5d),
+      key: _scaffoldKey,
       body: Stack(
         children: [
           Center(
@@ -17,19 +20,17 @@ class HomePage extends StatelessWidget {
                   height: size.height * 0.5,
                   width: size.height * 0.5,
                   child: const FadeInImage(
-                    placeholder: AssetImage('assets/img/cat_step.png'),
+                    placeholder: AssetImage('assets/img/footstep.png'),
                     fadeInDuration: Duration(milliseconds: 200),
                     fit: BoxFit.cover,
                     image: AssetImage('assets/img/cat_shape.png'),
                   ),
                 ),
-                const Text(
-                  'Catbreeds',
-                  style: TextStyle(
-                      fontSize: 50,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black)
-                ),
+                const Text('Catbreeds',
+                    style: TextStyle(
+                        fontSize: 50,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black)),
                 const SizedBox(
                   height: 100,
                 )

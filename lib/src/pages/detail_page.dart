@@ -1,35 +1,70 @@
 import 'package:flutter/material.dart';
+import 'package:cats_project/src/providers/cats_provider.dart';
 
 class DetailPage extends StatefulWidget {
   final Map<dynamic, dynamic> data;
-  DetailPage({required this.data});
+  const DetailPage({Key? key, required this.data}) : super(key: key);
 
   @override
   State<DetailPage> createState() => _DetailPageState();
 }
 
 class _DetailPageState extends State<DetailPage> {
+  final catsProvider = CatsProvider();
+  bool _cargando = true;
+  String photoCat = '';
+
+  @override
+  void initState() {
+    super.initState();
+    obtener();
+  }
+
+  void obtener() async {
+    _cargando = true;
+    setState(() {});
+
+    List imgCat = await catsProvider.getImgCat(widget.data['id']);
+
+    if (imgCat.isNotEmpty) photoCat = imgCat[0]['url'];
+
+    _cargando = false;
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final foto = 'https://cdn2.thecatapi.com/images/MJWtDz75E.jpg';
-
-    
 
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text(widget.data['name']),
-      // ),
-      body: Stack(
-        children: [
-          cuerpo(size, foto),
-          goBack(context),
-        ],
-      ),
+      body: _cargando
+          ? Center(
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Text(
+                    'Loading ...',
+                    style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(
+                    height: 20.0,
+                  ),
+                  CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation(Color(0xfffa7c5d)),
+                      backgroundColor: Colors.grey)
+                ],
+              ),
+          )
+          : Stack(
+              children: [
+                cuerpo(size),
+                goBack(context),
+              ],
+            ),
     );
   }
 
-  Widget cuerpo(Size size, String foto) {
+  Widget cuerpo(Size size) {
     return Column(
       children: [
         Container(
@@ -40,10 +75,12 @@ class _DetailPageState extends State<DetailPage> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20.0),
             child: FadeInImage(
-              placeholder: const AssetImage('assets/img/cat_step.png'),
+              placeholder: const AssetImage('assets/img/cat_shape.png'),
               fadeInDuration: const Duration(milliseconds: 200),
               fit: BoxFit.cover,
-              image: NetworkImage(foto),
+              image: (_cargando || photoCat == '')
+                  ? const AssetImage('assets/img/cat_shape.png')
+                  : NetworkImage(photoCat) as ImageProvider<Object>,
             ),
           ),
         ),
@@ -88,8 +125,8 @@ class _DetailPageState extends State<DetailPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10.0),
       child: Wrap(
-        spacing: 5.0, // Espaciado horizontal entre elementos
-        runSpacing: 0.0, // Espaciado vertical entre líneas (si es necesario)
+        spacing: 5.0,
+        runSpacing: 0.0,
         children: [
           Text(
             leading,
@@ -97,10 +134,8 @@ class _DetailPageState extends State<DetailPage> {
           ),
           Text(
             text,
-            maxLines:
-                2, // Cambia este valor si quieres limitar el texto a más líneas
-            overflow: TextOverflow
-                .ellipsis, // Si aún no cabe, muestra puntos suspensivos
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(color: Color(0xff9c9c9c)),
           ),
         ],
@@ -129,7 +164,8 @@ class _DetailPageState extends State<DetailPage> {
               child: const SizedBox(
                 width: 50.0,
                 height: 50.0,
-                child: Icon(Icons.chevron_left_outlined, color: Color(0xfffa7c5d)),
+                child:
+                    Icon(Icons.chevron_left_outlined, color: Color(0xfffa7c5d)),
               ),
             ),
           )),
