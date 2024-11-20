@@ -16,7 +16,6 @@ class _LandingPageState extends State<LandingPage> {
   List filteredCats = [];
   bool _cargando = true;
 
-
   @override
   void initState() {
     super.initState();
@@ -41,25 +40,23 @@ class _LandingPageState extends State<LandingPage> {
       body: Center(
           child: _cargando
               ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Text(
-                    'Loading ...',
-                    style: TextStyle(
-                      fontSize: 20.0,
-                      fontWeight: FontWeight.w600
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text(
+                      'Loading ...',
+                      style: TextStyle(
+                          fontSize: 20.0, fontWeight: FontWeight.w600),
                     ),
-                  ),
-                  SizedBox(height: 20.0,),
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation(Color(0xfffa7c5d)),
-                    backgroundColor: Colors.grey
-                  )
-                ],
-              )
+                    SizedBox(
+                      height: 20.0,
+                    ),
+                    CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation(Color(0xfffa7c5d)),
+                        backgroundColor: Colors.grey)
+                  ],
+                )
               : Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SafeArea(
                       child: Padding(
@@ -135,23 +132,38 @@ class _LandingPageState extends State<LandingPage> {
 
 class CardCat extends StatefulWidget {
   final Map infoCat;
-  const CardCat({Key? key, required this.infoCat}) :  super(key: key);  
+  const CardCat({Key? key, required this.infoCat}) : super(key: key);
 
   @override
   State<CardCat> createState() => CardCatState();
 }
 
 class CardCatState extends State<CardCat> {
+  final catsProvider = CatsProvider();
+  String photoCat = '';
+
+  @override
+  void initState() {
+    super.initState();
+    obtener();
+  }
+
+  void obtener() async {
+    List imgCat = await catsProvider.getImgCat(widget.infoCat['id']);
+
+    if (imgCat.isNotEmpty) photoCat = imgCat[0]['url'];
+
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
-    // String fotoCat = 
-    // // 'https://cdn2.thecatapi.com/images/MJWtDz75E.jpg';
-    // 'https://cdn2.thecatapi.com/images/${widget.infoCat['reference_image_id']}.jpg';
     return GestureDetector(
       onTap: () {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => DetailPage(data: widget.infoCat)));
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => DetailPage(data: widget.infoCat)));
       },
       child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 5.0),
@@ -173,17 +185,18 @@ class CardCatState extends State<CardCat> {
                             // color: Colors.white,
                             height: double.infinity,
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(20.0),
-                              child: const FadeInImage(
-                                  placeholder: AssetImage(
-                                      'assets/img/footstep.png'),
+                                borderRadius: BorderRadius.circular(20.0),
+                                child: FadeInImage(
+                                  placeholder: const AssetImage(
+                                      'assets/img/cat_shape.png'),
                                   fadeInDuration:
-                                      Duration(milliseconds: 200),
+                                      const Duration(milliseconds: 200),
                                   fit: BoxFit.cover,
-                                  image: AssetImage(
-                                      'assets/img/cat_shape.png'))
-                                  // image: imageProvider(fotoCat)),      
-                            )),
+                                  image: photoCat.isEmpty
+                                      ? const AssetImage(
+                                              'assets/img/cat_shape.png')
+                                      : NetworkImage(photoCat) as ImageProvider,) // image: imageProvider(fotoCat)),
+                                )),
                       ),
                     ),
                     Expanded(
@@ -252,14 +265,4 @@ class CardCatState extends State<CardCat> {
               ))),
     );
   }
-
-ImageProvider<Object> imageProvider(String fotoCat) {
-  try {
-    // Intenta cargar la imagen usando NetworkImage
-    return NetworkImage(fotoCat);
-  } catch (e) {
-    // Si hay un error, devuelve una imagen de respaldo
-    return const AssetImage('assets/img/footstep.png');
-  }
-}
 }
